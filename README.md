@@ -1,117 +1,169 @@
-# 🏠 Housing Price Prediction using Machine Learning
+# California Housing Price Prediction
 
-This project implements a machine learning pipeline to predict housing prices using the California housing dataset. It includes data preprocessing, feature engineering, and a Random Forest model.
+A Machine Learning project that predicts California housing prices using different housing features like income, population, total rooms, location, and ocean proximity.
 
----
-
-## 🚀 Features
-
-- Data preprocessing using pipelines  
-- Handling missing values  
-- Feature scaling and encoding  
-- Stratified sampling for balanced data  
-- Random Forest Regression model  
-- Model saving and loading using joblib  
-- Prediction on new input data  
+This project uses a complete Machine Learning pipeline with data preprocessing, feature engineering, model training, and prediction using Random Forest Regression.
 
 ---
 
-## 🛠️ Technologies Used
+# About The Project
 
-- Python  
-- NumPy  
-- Pandas  
-- Scikit-learn  
-- Joblib  
+I made this project to learn:
+- Machine Learning pipelines
+- Data preprocessing
+- Feature engineering
+- Model training
+- Flask web development
+- Model deployment
 
----
-
-## 📂 Project Structure
-
-├── main.py              # Main script for training and inference  
-├── housing.csv          # Dataset  
-├── input_data.csv       # Test input data  
-├── output_data.csv      # Prediction output  
-├── model.pkl            # Saved trained model  
-├── pipeline.pkl         # Saved preprocessing pipeline  
+The project can:
+- Train a machine learning model
+- Save the trained model
+- Load the saved model
+- Predict house prices using user input
+- Provide predictions through a Flask web interface
 
 ---
 
-## ⚙️ How It Works
+# Technologies Used
 
-1. Data Loading  
-   Loads dataset from `housing.csv`  
-
-2. Data Preprocessing  
-   - Handles missing values using median  
-   - Scales numerical features  
-   - Encodes categorical features using OneHotEncoder  
-
-3. Stratified Sampling  
-   Splits dataset based on income category for better distribution  
-
-4. Model Training  
-   Uses RandomForestRegressor to train the model  
-
-5. Model Saving  
-   Saves trained model as `model.pkl` and pipeline as `pipeline.pkl`  
+- Python
+- Flask
+- NumPy
+- Pandas
+- Scikit-learn
+- Joblib
+- HTML
+- CSS
+- JavaScript
 
 ---
 
-## 🔁 Training Mode
+# Project Structure
 
-If model file does not exist, run:
-
-python main.py
-
-The model will be trained and saved.
-
----
-
-## 🔮 Prediction Mode
-
-If model already exists:
-- Loads model and pipeline  
-- Reads input from `input_data.csv`  
-- Generates predictions  
-- Saves output to `output_data.csv`  
-
----
-
-## 📊 Output
-
-Predicted values are stored in a column named:
-
-median_house_value
-
----
-
-## 💡 Example Workflow
-
-1. Run script first time → Model trains  
-2. Run again → Predictions generated  
-3. Check `output_data.csv` for results  
+```text
+California-Housing-Price-Prediction/
+│
+├── static/                         # Static files
+│   ├── css/                        # CSS files
+│   ├── js/                         # JavaScript files
+│
+├── templates/                      # HTML templates
+│   └── index.html
+│
+├── housing.csv                     # California housing dataset
+├── input_data.csv                  # Input data for prediction
+├── output_data.csv                 # Prediction output
+│
+├── model.pkl                       # Saved trained model
+├── pipeline.pkl                    # Saved preprocessing pipeline
+│
+├── app.py                          # Flask web application
+├── main.py                         # Model training and prediction script
+├── requirements.txt                # Project dependencies
+├── .gitignore
+│
+└── README.md                       # Project documentation
+```
 
 ---
 
-## 🎯 Future Improvements
+# Features
 
-- Add hyperparameter tuning  
-- Use advanced models like XGBoost  
-- Add visualization dashboard  
-- Deploy as web app using Flask or Streamlit  
+- Machine Learning pipeline
+- Data preprocessing
+- Missing value handling
+- Feature scaling
+- One-hot encoding
+- Random Forest Regression model
+- Model saving and loading
+- Housing price prediction
+- Flask web interface
 
 ---
 
-## 👨‍💻 Author
+# Machine Learning Workflow
 
-Vansh Kashyap  
+1. Load California housing dataset  
+2. Create stratified train-test split  
+3. Handle missing values using SimpleImputer  
+4. Scale numerical features using StandardScaler  
+5. Encode categorical features using OneHotEncoder  
+6. Train RandomForestRegressor model  
+7. Save trained model and pipeline using Joblib  
+8. Predict housing prices using new input data  
 
 ---
 
-## ⭐ Note
+# Installation
 
-This project is suitable for:
-- Machine Learning beginners  
-- Data Science projects  
-- College mini-project submissions  
+## Step 1 — Clone the Repository
+
+```bash
+git clone <your-repository-link>
+cd your-project-folder
+```
+
+---
+
+## Step 2 — Install Requirements
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+# How To Run The Project
+
+## Run Flask Application
+
+```bash
+python app.py
+```
+
+Then open:
+
+```text
+http://127.0.0.1:5000
+```
+
+---
+
+# Input Features
+
+The model predicts house prices using:
+
+- Longitude
+- Latitude
+- Housing Median Age
+- Total Rooms
+- Total Bedrooms
+- Population
+- Households
+- Median Income
+- Ocean Proximity
+
+---
+
+# Model Used
+
+- Random Forest Regressor
+
+---
+
+# Example Prediction
+
+The user enters housing details in the web form, and the model predicts the estimated house price.
+
+---
+
+# Requirements
+
+```text
+flask
+joblib
+numpy
+pandas
+scikit-learn
+```
