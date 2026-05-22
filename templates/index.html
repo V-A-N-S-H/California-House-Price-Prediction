@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gurgaon House Price Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+    <main class="container">
+        <header class="hero">
+            <div>
+                <p class="eyebrow">Machine Learning Demo</p>
+                <h1>Gurgaon House Price Predictor</h1>
+                <p>Enter property details and get an estimated median house value.</p>
+            </div>
+            <span class="badge">Random Forest</span>
+        </header>
+
+        {% if error %}
+            <div class="alert error">{{ error }}</div>
+        {% endif %}
+
+        {% if prediction %}
+            <section class="result">
+                <h2>Predicted House Price</h2>
+                <p>{{ prediction }}</p>
+            </section>
+        {% endif %}
+
+        <section class="card">
+            <h2>Property Inputs</h2>
+            <p class="subtext">Each field shows an example value to help with quick testing.</p>
+
+            <form method="post" class="prediction-form">
+                <div class="form-grid">
+                    {% for field in numeric_fields %}
+                        <div class="form-group">
+                            <label for="{{ field.name }}">{{ field.label }}</label>
+                            <input
+                                id="{{ field.name }}"
+                                name="{{ field.name }}"
+                                type="number"
+                                step="{{ field.step }}"
+                                placeholder="e.g. {{ field.example }}"
+                                value="{{ form_values[field.name] }}"
+                                {% if field.required %}required{% endif %}
+                            />
+                            {% if field.help %}
+                                <small>{{ field.help }}</small>
+                            {% else %}
+                                <small>Example: {{ field.example }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="form-group">
+                        <label for="ocean_proximity">Ocean Proximity</label>
+                        <select id="ocean_proximity" name="ocean_proximity" required>
+                            {% for option in ocean_options %}
+                                <option value="{{ option }}" {% if option == selected_ocean %}selected{% endif %}>
+                                    {{ option }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small>Example: &lt;1H OCEAN or NEAR OCEAN</small>
+                    </div>
+                </div>
+
+                <button type="submit">Predict Price</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

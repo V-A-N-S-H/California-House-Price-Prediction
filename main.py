@@ -88,7 +88,7 @@ else:
     input_data['median_house_value'] = prediction
 
     input_data.to_csv('output_data.csv', index=False)
-    print("Inference is done. result is saved ot output.csv. Congrats!")
+    print("Inference is done. result is saved on output.csv. Congrats!")
     
 
 
