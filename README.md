@@ -100,8 +100,8 @@ California-Housing-Price-Prediction/
 ## Step 1 — Clone the Repository
 
 ```bash
-git clone <your-repository-link>
-cd your-project-folder
+git clone https://github.com/V-A-N-S-H/California-House-Price-Prediction.git
+cd California-House-Price-Prediction
 ```
 
 ---
