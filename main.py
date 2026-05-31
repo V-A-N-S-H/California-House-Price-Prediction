@@ -89,10 +89,3 @@ else:
 
     input_data.to_csv('output_data.csv', index=False)
     print("Inference is done. result is saved on output.csv. Congrats!")
-    
-
-
-
-
-
-

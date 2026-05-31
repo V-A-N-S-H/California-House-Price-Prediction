@@ -1,226 +1,170 @@
-from pathlib import Path
-
+import os
 import joblib
 import numpy as np
 import pandas as pd
-from flask import Flask, render_template, request
-from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.impute import SimpleImputer
-from sklearn.model_selection import StratifiedShuffleSplit
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from flask import Flask, jsonify, render_template, request
 
 app = Flask(__name__)
 
-BASE_DIR = Path(__file__).resolve().parent
-DATA_FILE = BASE_DIR / "housing.csv"
-MODEL_FILE = BASE_DIR / "model.pkl"
-PIPELINE_FILE = BASE_DIR / "pipeline.pkl"
+# Load model, pipeline, and dataset
+MODEL_FILE = "model.pkl"
+PIPELINE_FILE = "pipeline.pkl"
+DATA_FILE = "housing.csv"
 
-NUMERIC_FIELDS = [
-    {
-        "name": "longitude",
-        "label": "Longitude",
-        "step": "0.01",
-        "required": True,
-        "example": "-118.39",
-    },
-    {
-        "name": "latitude",
-        "label": "Latitude",
-        "step": "0.01",
-        "required": True,
-        "example": "34.12",
-    },
-    {
-        "name": "housing_median_age",
-        "label": "Housing Median Age",
-        "step": "1",
-        "required": True,
-        "example": "29",
-    },
-    {
-        "name": "total_rooms",
-        "label": "Total Rooms",
-        "step": "1",
-        "required": True,
-        "example": "3200",
-    },
-    {
-        "name": "total_bedrooms",
-        "label": "Total Bedrooms",
-        "step": "1",
-        "required": False,
-        "help": "Optional — leave blank if unknown.",
-        "example": "650",
-    },
-    {
-        "name": "population",
-        "label": "Population",
-        "step": "1",
-        "required": True,
-        "example": "1500",
-    },
-    {
-        "name": "households",
-        "label": "Households",
-        "step": "1",
-        "required": True,
-        "example": "540",
-    },
-    {
-        "name": "median_income",
-        "label": "Median Income",
-        "step": "0.0001",
-        "required": True,
-        "example": "5.2800",
-    },
-]
+# Load ML assets
+if os.path.exists(MODEL_FILE) and os.path.exists(PIPELINE_FILE):
+    model = joblib.load(MODEL_FILE)
+    pipeline = joblib.load(PIPELINE_FILE)
+    model_loaded = True
+else:
+    model_loaded = False
+    print("WARNING: Model and pipeline files not found! Prediction API will be unavailable.")
 
-FEATURE_ORDER = [field["name"] for field in NUMERIC_FIELDS] + ["ocean_proximity"]
+# Load housing dataset
+if os.path.exists(DATA_FILE):
+    df_raw = pd.read_csv(DATA_FILE)
+    # Strip column names just in case
+    df_raw.columns = df_raw.columns.str.strip()
+    data_loaded = True
+else:
+    df_raw = pd.DataFrame()
+    data_loaded = False
+    print("WARNING: housing.csv dataset not found!")
 
+# Cache processed statistics for the dashboard
+cached_stats = {}
+map_sample_data = []
 
-def build_pipeline(num_attributes, cat_attributes):
-    num_pipeline = Pipeline(
-        [
-            ("imputer", SimpleImputer(strategy="median")),
-            ("scaler", StandardScaler()),
-        ]
-    )
+def precompute_statistics():
+    global cached_stats, map_sample_data
+    if not data_loaded:
+        return
+    
+    # 1. Basic KPI metrics
+    cached_stats["kpis"] = {
+        "total_records": int(len(df_raw)),
+        "avg_house_value": float(df_raw["median_house_value"].mean()),
+        "median_house_value": float(df_raw["median_house_value"].median()),
+        "avg_income": float(df_raw["median_income"].mean() * 10000),  # Convert to actual dollars
+        "avg_age": float(df_raw["housing_median_age"].mean()),
+        "total_population": int(df_raw["population"].sum())
+    }
 
-    cat_pipeline = Pipeline(
-        [
-            ("onehot", OneHotEncoder(handle_unknown="ignore")),
-        ]
-    )
+    # 2. Correlation Matrix (Numerical variables only)
+    num_cols = df_raw.select_dtypes(include=[np.number]).columns.tolist()
+    corr_matrix = df_raw[num_cols].corr().round(2)
+    # Convert correlation matrix to ECharts suitable format
+    cached_stats["correlation"] = {
+        "columns": num_cols,
+        "values": corr_matrix.values.tolist()
+    }
 
-    return ColumnTransformer(
-        [
-            ("num", num_pipeline, num_attributes),
-            ("cat", cat_pipeline, cat_attributes),
-        ]
-    )
+    # 3. Ocean Proximity Stats (Bar Chart data)
+    ocean_group = df_raw.groupby("ocean_proximity").agg(
+        avg_price=("median_house_value", "mean"),
+        avg_income=("median_income", "mean"),
+        count=("median_house_value", "count")
+    ).round(2).reset_index()
+    
+    cached_stats["ocean_proximity_stats"] = {
+        "categories": ocean_group["ocean_proximity"].tolist(),
+        "avg_prices": ocean_group["avg_price"].tolist(),
+        "avg_incomes": (ocean_group["avg_income"] * 10000).tolist(),
+        "counts": ocean_group["count"].tolist()
+    }
 
+    # 4. Income vs House Value distribution for Scatter plot
+    # To prevent browser lockup, we sample 1000 points specifically for scatter analytics
+    scatter_df = df_raw.sample(n=min(1000, len(df_raw)), random_state=42)
+    cached_stats["scatter_data"] = scatter_df[["median_income", "median_house_value", "housing_median_age"]].values.tolist()
 
-def train_model():
-    housing = pd.read_csv(DATA_FILE)
-    housing.columns = housing.columns.str.strip()
+    # 5. Price range distribution (Histogram data)
+    prices = df_raw["median_house_value"].dropna()
+    counts, bins = np.histogram(prices, bins=15)
+    cached_stats["price_distribution"] = {
+        "counts": counts.tolist(),
+        "bins": [float(b) for b in bins]
+    }
 
-    housing["income_cat"] = pd.cut(
-        housing["median_income"],
-        bins=[0.0, 1.5, 3.0, 4.5, 6.0, np.inf],
-        labels=[1, 2, 3, 4, 5],
-    )
+    # 6. Map Sample Points (Downsampled coordinates for Leaflet map to prevent lag)
+    # Stratified-like representation: Sample ~1,500 points uniformly across the dataset
+    map_df = df_raw.sample(n=min(1500, len(df_raw)), random_state=42)
+    map_sample_data = map_df[[
+        "longitude", "latitude", "median_house_value", 
+        "median_income", "housing_median_age", "ocean_proximity"
+    ]].to_dict(orient="records")
 
-    split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
-    for train_index, _ in split.split(housing, housing["income_cat"]):
-        strat_train_set = housing.iloc[train_index].drop("income_cat", axis=1)
+# Run precomputation at startup
+if data_loaded:
+    precompute_statistics()
 
-    housing_train = strat_train_set.copy()
-    housing_features = housing_train.drop("median_house_value", axis=1)
-    housing_labels = housing_train["median_house_value"].copy()
-
-    num_attributes = housing_features.drop("ocean_proximity", axis=1).columns.tolist()
-    cat_attributes = ["ocean_proximity"]
-
-    preprocessor = build_pipeline(num_attributes, cat_attributes)
-    housing_prepared = preprocessor.fit_transform(housing_features)
-
-    model = RandomForestRegressor(random_state=42)
-    model.fit(housing_prepared, housing_labels)
-
-    joblib.dump(model, MODEL_FILE)
-    joblib.dump(preprocessor, PIPELINE_FILE)
-
-    return model, preprocessor
-
-
-def ensure_model():
-    if MODEL_FILE.exists() and PIPELINE_FILE.exists():
-        try:
-            return joblib.load(MODEL_FILE), joblib.load(PIPELINE_FILE)
-        except Exception:
-            pass
-
-    return train_model()
-
-
-def get_ocean_options():
-    ocean_data = pd.read_csv(DATA_FILE, usecols=["ocean_proximity"])
-    options = (
-        ocean_data["ocean_proximity"]
-        .astype(str)
-        .str.strip()
-        .replace("nan", np.nan)
-        .dropna()
-        .unique()
-        .tolist()
-    )
-    return sorted(options)
-
-
-def parse_float(raw_value, label, required=True):
-    if raw_value == "":
-        if required:
-            raise ValueError(f"{label} is required.")
-        return np.nan
-
-    try:
-        return float(raw_value)
-    except ValueError as exc:
-        raise ValueError(f"{label} must be a valid number.") from exc
-
-
-MODEL, PREPROCESSOR = ensure_model()
-OCEAN_OPTIONS = get_ocean_options()
-
-
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
 def index():
-    prediction = None
-    error = None
+    return render_template("index.html")
 
-    form_values = {field["name"]: "" for field in NUMERIC_FIELDS}
-    selected_ocean = OCEAN_OPTIONS[0] if OCEAN_OPTIONS else ""
+@app.route("/api/statistics")
+def get_statistics():
+    if not data_loaded:
+        return jsonify({"error": "Dataset not available"}), 500
+    return jsonify(cached_stats)
 
-    if request.method == "POST":
-        try:
-            input_row = {}
+@app.route("/api/map-data")
+def get_map_data():
+    if not data_loaded:
+        return jsonify({"error": "Dataset not available"}), 500
+    return jsonify(map_sample_data)
 
-            for field in NUMERIC_FIELDS:
-                raw_value = request.form.get(field["name"], "").strip()
-                form_values[field["name"]] = raw_value
-                input_row[field["name"]] = parse_float(
-                    raw_value,
-                    field["label"],
-                    required=field.get("required", True),
-                )
-
-            selected_ocean = request.form.get("ocean_proximity", "").strip()
-            if selected_ocean not in OCEAN_OPTIONS:
-                raise ValueError("Please select a valid ocean proximity value.")
-
-            input_row["ocean_proximity"] = selected_ocean
-            input_df = pd.DataFrame([input_row], columns=FEATURE_ORDER)
-
-            transformed_input = PREPROCESSOR.transform(input_df)
-            predicted_price = float(MODEL.predict(transformed_input)[0])
-            prediction = f"${predicted_price:,.2f}"
-
-        except ValueError as exc:
-            error = str(exc)
-
-    return render_template(
-        "index.html",
-        numeric_fields=NUMERIC_FIELDS,
-        ocean_options=OCEAN_OPTIONS,
-        selected_ocean=selected_ocean,
-        form_values=form_values,
-        prediction=prediction,
-        error=error,
-    )
-
+@app.route("/api/predict", methods=["POST"])
+def predict():
+    if not model_loaded:
+        return jsonify({"error": "Model or preprocessing pipeline not loaded"}), 500
+    
+    try:
+        req_data = request.get_json()
+        
+        # Verify required keys are present
+        required_features = [
+            "longitude", "latitude", "housing_median_age", 
+            "total_rooms", "total_bedrooms", "population", 
+            "households", "median_income", "ocean_proximity"
+        ]
+        
+        missing = [f for f in required_features if f not in req_data]
+        if missing:
+            return jsonify({"error": f"Missing required parameters: {', '.join(missing)}"}), 400
+        
+        # Parse inputs into structured DataFrame for sklearn pipeline
+        input_dict = {
+            "longitude": [float(req_data["longitude"])],
+            "latitude": [float(req_data["latitude"])],
+            "housing_median_age": [float(req_data["housing_median_age"])],
+            "total_rooms": [float(req_data["total_rooms"])],
+            "total_bedrooms": [float(req_data["total_bedrooms"])],
+            "population": [float(req_data["population"])],
+            "households": [float(req_data["households"])],
+            "median_income": [float(req_data["median_income"])],
+            "ocean_proximity": [str(req_data["ocean_proximity"]).strip()]
+        }
+        
+        df_input = pd.DataFrame(input_dict)
+        
+        # Pass DataFrame through the transformer pipeline
+        transformed = pipeline.transform(df_input)
+        
+        # Make prediction
+        prediction = model.predict(transformed)[0]
+        
+        # Format the output price cleanly
+        predicted_value = float(np.round(prediction, 2))
+        
+        return jsonify({
+            "success": True,
+            "predicted_price": predicted_value,
+            "formatted_price": f"${predicted_value:,.2f}"
+        })
+        
+    except Exception as e:
+        return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="127.0.0.1", port=5000, debug=True)
