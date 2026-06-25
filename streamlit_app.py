@@ -133,7 +133,7 @@ def load_ml_assets():
         pipeline = joblib.load("pipeline.pkl")
         return model, pipeline
     except Exception as e:
-        st.error(f"Failed to load Machine Learning assets: {e}")
+        st.error(f"Could not load Machine Learning models: {e}")
         return None, None
 
 @st.cache_data
