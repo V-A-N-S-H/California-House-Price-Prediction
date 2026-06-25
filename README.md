@@ -1,169 +1,182 @@
-# California Housing Price Prediction
+# California House Price Prediction
 
-A Machine Learning project that predicts California housing prices using different housing features like income, population, total rooms, location, and ocean proximity.
+A Machine Learning project that predicts California house prices using housing features such as location, median income, population, total rooms, total bedrooms, and ocean proximity. The application is built with Streamlit and uses a Random Forest Regression model to provide accurate house price predictions along with an interactive analytics dashboard.
 
-This project uses a complete Machine Learning pipeline with data preprocessing, feature engineering, model training, and prediction using Random Forest Regression.
+## Live Demo
 
----
-
-# About The Project
-
-I made this project to learn:
-- Machine Learning pipelines
-- Data preprocessing
-- Feature engineering
-- Model training
-- Flask web development
-- Model deployment
-
-The project can:
-- Train a machine learning model
-- Save the trained model
-- Load the saved model
-- Predict house prices using user input
-- Provide predictions through a Flask web interface
+Deployment:
+https://california-house-price-prediction-ecuopu6vyxc66tjbdr2bhn.streamlit.app/
 
 ---
 
-# Technologies Used
+## Features
 
-- Python
-- Flask
-- NumPy
-- Pandas
-- Scikit-learn
-- Joblib
-- HTML
-- CSS
-- JavaScript
+* Predict California house prices using machine learning
+* Interactive dashboard for housing data analysis
+* Geographic visualization of housing data
+* Random Forest Regression model
+* Data preprocessing using Scikit-learn Pipeline
+* Interactive Streamlit user interface
+* Fast and accurate predictions
 
 ---
 
-# Project Structure
+## Technologies Used
+
+* Python
+* Streamlit
+* Pandas
+* NumPy
+* Scikit-learn
+* Joblib
+* Streamlit ECharts
+
+---
+
+## Project Structure
 
 ```text
-California-Housing-Price-Prediction/
+California-House-Price-Prediction/
 │
-├── static/                         # Static files
-│   ├── css/                        # CSS files
-│   ├── js/                         # JavaScript files
-│
-├── templates/                      # HTML templates
-│   └── index.html
-│
-├── housing.csv                     # California housing dataset
-├── input_data.csv                  # Input data for prediction
-├── output_data.csv                 # Prediction output
-│
-├── model.pkl                       # Saved trained model
-├── pipeline.pkl                    # Saved preprocessing pipeline
-│
-├── app.py                          # Flask web application
-├── main.py                         # Model training and prediction script
-├── requirements.txt                # Project dependencies
-├── .gitignore
-│
-└── README.md                       # Project documentation
+├── streamlit_app.py        # Streamlit application
+├── main.py                 # Model training script
+├── housing.csv             # California housing dataset
+├── input_data.csv          # Sample input data
+├── output_data.csv         # Prediction output
+├── model.pkl               # Trained Random Forest model
+├── pipeline.pkl            # Data preprocessing pipeline
+├── requirements.txt        # Project dependencies
+├── README.md
+└── .gitignore
 ```
 
 ---
 
-# Features
+## How It Works
 
-- Machine Learning pipeline
-- Data preprocessing
-- Missing value handling
-- Feature scaling
-- One-hot encoding
-- Random Forest Regression model
-- Model saving and loading
-- Housing price prediction
-- Flask web interface
-
----
-
-# Machine Learning Workflow
-
-1. Load California housing dataset  
-2. Create stratified train-test split  
-3. Handle missing values using SimpleImputer  
-4. Scale numerical features using StandardScaler  
-5. Encode categorical features using OneHotEncoder  
-6. Train RandomForestRegressor model  
-7. Save trained model and pipeline using Joblib  
-8. Predict housing prices using new input data  
+1. Load the California Housing dataset.
+2. Create a stratified train-test split.
+3. Handle missing values using SimpleImputer.
+4. Scale numerical features using StandardScaler.
+5. Encode categorical features using OneHotEncoder.
+6. Train a Random Forest Regression model.
+7. Save the trained model and preprocessing pipeline.
+8. Accept user input through the Streamlit interface.
+9. Predict the estimated house price instantly.
 
 ---
 
-# Installation
+## Dataset
 
-## Step 1 — Clone the Repository
+The project uses the California Housing Dataset containing housing information such as:
+
+* Longitude
+* Latitude
+* Housing Median Age
+* Total Rooms
+* Total Bedrooms
+* Population
+* Households
+* Median Income
+* Ocean Proximity
+* Median House Value
+
+---
+
+## Installation
+
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/V-A-N-S-H/California-House-Price-Prediction.git
+```
+
+### 2. Navigate to the project directory
+
+```bash
 cd California-House-Price-Prediction
 ```
 
----
-
-## Step 2 — Install Requirements
+### 3. Install the required dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-# How To Run The Project
-
-## Run Flask Application
+### 4. Run the application
 
 ```bash
-python app.py
-```
-
-Then open:
-
-```text
-http://127.0.0.1:5000
+streamlit run streamlit_app.py
 ```
 
 ---
 
-# Input Features
+## Machine Learning Workflow
 
-The model predicts house prices using:
-
-- Longitude
-- Latitude
-- Housing Median Age
-- Total Rooms
-- Total Bedrooms
-- Population
-- Households
-- Median Income
-- Ocean Proximity
+* Data Cleaning
+* Stratified Train-Test Split
+* Missing Value Imputation
+* Feature Scaling
+* One-Hot Encoding
+* Random Forest Regression
+* Model Evaluation
+* House Price Prediction
 
 ---
 
-# Model Used
+## Model Used
 
-- Random Forest Regressor
-
----
-
-# Example Prediction
-
-The user enters housing details in the web form, and the model predicts the estimated house price.
+* Random Forest Regressor
 
 ---
 
-# Requirements
+## Input Features
 
-```text
-flask
-joblib
-numpy
-pandas
-scikit-learn
-```
+The model predicts house prices using the following features:
+
+* Longitude
+* Latitude
+* Housing Median Age
+* Total Rooms
+* Total Bedrooms
+* Population
+* Households
+* Median Income
+* Ocean Proximity
+
+---
+
+## Future Improvements
+
+* Compare multiple regression models
+* Hyperparameter tuning
+* Feature importance visualization
+* Real-time data integration
+* Batch prediction using CSV upload
+* Model performance dashboard
+
+---
+
+## Contributing
+
+Contributions are welcome.
+
+1. Fork the repository.
+2. Create a new branch.
+3. Commit your changes.
+4. Push the branch.
+5. Open a Pull Request.
+
+---
+
+## Author
+
+**Vansh**
+
+GitHub: https://github.com/V-A-N-S-H
+
+---
+
+## Support
+
+If you found this project helpful, consider giving it a star on GitHub.
