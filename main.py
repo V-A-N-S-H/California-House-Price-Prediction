@@ -9,8 +9,6 @@ from sklearn.model_selection import StratifiedShuffleSplit   # for splitting the
 from sklearn.preprocessing import StandardScaler, OneHotEncoder   # for feature scaling and encoding
 from sklearn.ensemble import RandomForestRegressor   # for random forest regression
 
-
-
 MODEL_FILE = "model.pkl"
 PIPELINE = "pipeline.pkl"
 
@@ -68,8 +66,8 @@ if not os.path.exists(MODEL_FILE):
     pipeline = build_pipeline(num_attributes, cat_attributes) 
     housing_prepared = pipeline.fit_transform(housing_features)
 
-    # 14. Train a random forest regression model
-    model = RandomForestRegressor(random_state=42)
+    # 14. Train a random forest regression model (constrained to reduce file size < 100MB)
+    model = RandomForestRegressor(random_state=42, max_depth=15, min_samples_leaf=5)
     model.fit(housing_prepared, housing_labels)
 
     # 15. Saving the model
